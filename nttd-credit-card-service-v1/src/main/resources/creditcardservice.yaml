@@ -1,0 +1,246 @@
+openapi: 3.0.0
+info:
+  title: Credit Card API
+  version: 1.0.0
+  description: API for managing credit cards
+servers:
+  - url: localhost:8082/api/v1
+    description: Production server
+
+paths:
+  /credit-card/save:
+    post:
+      summary: Save a new credit card
+      operationId: saveTransaction
+      tags:
+        - Credit Card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /credit-card/consumption:
+    post:
+      summary: Process a consumption on a credit card
+      operationId: processConsumption
+      tags:
+        - Credit Card
+      parameters:
+        - name: clientId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: creditCardId
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumptionRequest'
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /credit-card/has-credit-card/{clientId}:
+    get:
+      tags:
+        - Credit Card
+      summary: Check if the client has a credit card
+      description: Returns true if the client has a credit card, otherwise false.
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          description: Unique identifier of the client
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully checked if the client has a credit card
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '400':
+          description: Invalid client id provided
+        '500':
+          description: Internal server error
+
+  /credit-card/average-daily-balances:
+    get:
+      summary: Get average daily balances for a client's credit cards
+      operationId: getAverageDailyBalances
+      tags:
+        - Credit Card
+      parameters:
+        - name: clientId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AverageDailyBalanceResponse'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /credit-card/{creditCardId}:
+    get:
+      summary: Get a credit card by ID
+      operationId: getCreditCardById
+      tags:
+        - Credit Card
+      parameters:
+        - name: creditCardId
+          in: path
+          required: true
+          description: Unique identifier of the credit card
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          description: Bad Request
+        '404':
+          description: Credit card not found
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Update a credit card
+      operationId: updateCreditCard
+      tags:
+        - Credit Card
+      parameters:
+        - name: creditCardId
+          in: path
+          required: true
+          description: Unique identifier of the credit card
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+      responses:
+        '200':
+          description: Credit card updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardResponse'
+        '400':
+          description: Bad Request
+        '404':
+          description: Credit card not found
+        '500':
+          description: Internal Server Error
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+    CreditCardRequest:
+      type: object
+      x-java-class-name: CreditCardRequest
+      required:
+        - cardId
+        - clientId
+        - creditLimit
+        - availableBalance
+      properties:
+        cardId:
+          type: string
+        clientId:
+          type: string
+        creditLimit:
+          type: number
+          format: double
+        availableBalance:
+          type: number
+          format: double
+    CreditCardResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        cardId:
+          type: string
+        clientId:
+          type: string
+        creditLimit:
+          type: number
+          format: double
+        availableBalance:
+          type: number
+          format: double
+    ConsumptionRequest:
+      type: object
+      x-java-class-name: ConsumptionRequest
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          format: double
+    AverageDailyBalanceResponse:
+      type: object
+      properties:
+        clientId:
+          type: string
+        balances:
+          type: array
+          items:
+            type: number
+            format: double
